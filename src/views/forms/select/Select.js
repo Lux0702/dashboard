@@ -1,94 +1,56 @@
-import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CFormSelect, CRow } from '@coreui/react'
-import { DocsExample } from 'src/components'
-
+import React, { useState } from 'react'
+import { CCard, CCardBody, CCardHeader, CCol, CAlert, CRow } from '@coreui/react'
+import { CFormInput, CInputGroup, CInputGroupText, CButton } from '@coreui/react'
 const Select = () => {
+  const [categoryName, setCategoryName] = useState('')
+  const [alert, setAlert] = useState(null)
+  const handleAddCategory = async () => {
+    const token =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTc0NWU3NWYyYWQ0OWVhYjdlZDdkMzAiLCJpYXQiOjE3MDI2NjI4MDIsImV4cCI6MTcwMjY2NDYwMn0.LkuxhGJvDdN8wwTnlZFnfu8rNdVI01eGeG88RV-xw-M'
+    try {
+      const response = await fetch('http://localhost:3333/api/v1/categories/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          categoryName: categoryName,
+        }),
+      })
+
+      if (response.ok) {
+        setAlert({ color: 'success', message: 'Thêm thể loại thành công' })
+      } else {
+        const errorData = await response.json()
+        setAlert({ color: 'danger', message: errorData.message || 'Có lỗi xảy ra' })
+      }
+    } catch (error) {
+      console.error('Error adding category:', error)
+      setAlert({ color: 'danger', message: 'Có lỗi xảy ra' })
+    }
+  }
   return (
     <CRow>
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>React Select</strong> <small>Default</small>
+            <strong>Thêm thể loại</strong> <small>Mặc định</small>
           </CCardHeader>
           <CCardBody>
-            <DocsExample href="forms/select">
-              <CFormSelect aria-label="Default select example">
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-            </DocsExample>
-          </CCardBody>
-        </CCard>
-      </CCol>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>React Select</strong> <small>Sizing</small>
-          </CCardHeader>
-          <CCardBody>
-            <p className="text-medium-emphasis small">
-              You may also choose from small and large custom selects to match our similarly sized
-              text inputs.
-            </p>
-            <DocsExample href="forms/select#sizing">
-              <CFormSelect size="lg" className="mb-3" aria-label="Large select example">
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-              <CFormSelect size="sm" className="mb-3" aria-label="Small select example">
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-            </DocsExample>
-            <p className="text-medium-emphasis small">
-              The <code>multiple</code> attribute is also supported:
-            </p>
-            <DocsExample href="forms/select#sizing">
-              <CFormSelect size="lg" multiple aria-label="Multiple select example">
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-            </DocsExample>
-            <p className="text-medium-emphasis small">
-              As is the <code>htmlSize</code> property:
-            </p>
-            <DocsExample href="forms/select#sizing">
-              <CFormSelect size="lg" multiple aria-label="Multiple select example">
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-            </DocsExample>
-          </CCardBody>
-        </CCard>
-      </CCol>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>React Select</strong> <small>Disabled</small>
-          </CCardHeader>
-          <CCardBody>
-            <p className="text-medium-emphasis small">
-              Add the <code>disabled</code> boolean attribute on a select to give it a grayed out
-              appearance and remove pointer events.
-            </p>
-            <DocsExample href="forms/select#disabled">
-              <CFormSelect aria-label="Disabled select example" disabled>
-                <option>Open this select menu</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </CFormSelect>
-            </DocsExample>
+            {alert && <CAlert color={alert.color}>{alert.message}</CAlert>}
+            <CInputGroup className="profile-input">
+              <CInputGroupText>Thể loại</CInputGroupText>
+              <CFormInput
+                aria-label="categoryName"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
+            </CInputGroup>
+            <br />
+            <CButton color="primary" onClick={handleAddCategory}>
+              Thêm
+            </CButton>
           </CCardBody>
         </CCard>
       </CCol>

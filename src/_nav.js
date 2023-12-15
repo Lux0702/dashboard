@@ -159,7 +159,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Select',
+        name: 'Thêm thể loại',
         to: '/forms/select',
       },
       {
