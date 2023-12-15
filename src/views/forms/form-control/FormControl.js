@@ -179,9 +179,9 @@ const FormControl = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     console.log(formData)
-    //const userInfoString = localStorage.getItem('userInfo')
-    //const token = userInfoString.accessToken
-    const token = ''
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
     const formDataToSend = new FormData()
 
     // Gán giá trị từ state formData vào formDataToSend

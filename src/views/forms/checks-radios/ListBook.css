@@ -1,0 +1,7 @@
+.change-btn{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-right: 5px;
+    margin-top: 10px;
+}

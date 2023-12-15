@@ -3,20 +3,38 @@ import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/inde
 
 const DefaultLayout = () => {
   useEffect(() => {
-    const handleStorageChange = (event) => {
-      if (event.key === 'userInfo') {
-        const userInfo = JSON.parse(event.newValue)
-        console.log('UserInfo received from another app:', userInfo)
-        // Xử lý dữ liệu userInfo ở đây
-        const storedUserInfo = localStorage.getItem('userInfo')
-        console.log('UserInfo stored in localStorage:', JSON.parse(storedUserInfo))
+    // Define user credentials
+    const credentials = {
+      email: 'lakln1602@gmail.com', // Replace with the actual email
+      passWord: '12345678', // Replace with the actual password
+    }
+
+    const login = async () => {
+      try {
+        // Make a POST request to the login API
+        const response = await fetch('http://localhost:3333/api/v1/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(credentials),
+        })
+        if (response.ok) {
+          // Parse the response data
+          const data = await response.json()
+
+          // Store user information in local storage
+          localStorage.setItem('userInfo', JSON.stringify(data))
+          console.log('Login successful:', data)
+        } else {
+          console.error('Login failed:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Error during login:', error)
       }
     }
-    // Thêm lắng nghe sự kiện storage khi component được mount
-    window.addEventListener('storage', handleStorageChange)
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
+    // Call the login function
+    login()
   }, [])
   return (
     <div>

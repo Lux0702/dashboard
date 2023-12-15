@@ -149,7 +149,7 @@ const _nav = [
   },
   {
     component: CNavGroup,
-    name: 'Forms',
+    name: 'Quản lí sản phẩm',
     icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
     items: [
       {
@@ -164,7 +164,7 @@ const _nav = [
       },
       {
         component: CNavItem,
-        name: 'Checks & Radios',
+        name: 'Danh sách sản phẩm',
         to: '/forms/checks-radios',
       },
       {
