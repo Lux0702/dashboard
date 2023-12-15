@@ -28,7 +28,7 @@ const FormControl = () => {
   const [inputAuthors, setInputAuthors] = useState('')
   const [inputCategories, setInputCategories] = useState('')
   const [categoryOptions, setCategoryOptions] = useState([])
-  //const [authorOptions, setAuthorOptions] = useState([])
+  const [authorOptions, setAuthorOptions] = useState([])
   // const categoryOptions = [
   //   { value: 'Tiểu thuyết', label: 'Tiểu Thuyết' },
   //   { value: 'Lãng mạn', label: 'Lãng mạn' },
@@ -37,11 +37,11 @@ const FormControl = () => {
   //   { value: 'Option 5', label: 'Option 5' },
   // ]
 
-  const authorOptions = [
-    { value: 'Author 1', label: 'Author 1' },
-    { value: 'Author 2', label: 'Author 2' },
-    { value: 'Author 3', label: 'Author 3' },
-  ]
+  // const authorOptions = [
+  //   { value: 'Author 1', label: 'Author 1' },
+  //   { value: 'Author 2', label: 'Author 2' },
+  //   { value: 'Author 3', label: 'Author 3' },
+  // ]
 
   const [formData, setFormData] = useState({
     title: '',
@@ -71,6 +71,25 @@ const FormControl = () => {
               categoryData.data.map((category) => ({
                 value: category.categoryName,
                 label: category.categoryName,
+              })),
+            )
+          } else {
+            console.error('Dữ liệu từ API không đúng định dạng.')
+          }
+        } else {
+          console.error('Không thể lấy dữ liệu từ API.')
+        }
+        const authorResponse = await fetch('http://localhost:3333/api/v1/authors')
+        if (authorResponse.ok) {
+          const authorData = await authorResponse.json()
+          // In ra console để xem dữ liệu trả về từ API
+          console.log('categoryData:', authorData)
+          // Kiểm tra xem categoryData có thuộc tính categories không
+          if (authorData && authorData.data && Array.isArray(authorData.data)) {
+            setAuthorOptions(
+              authorData.data.map((author) => ({
+                value: author.authorName,
+                label: author.authorName,
               })),
             )
           } else {
