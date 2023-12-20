@@ -400,15 +400,6 @@ const FormControl = () => {
           </CCardBody>
         </CCard>
       </CCol>
-      {/* Toast thông báo */}
-      <CustomToast
-        title="Success"
-        body="Dữ liệu đã được gửi thành công."
-        closeButton={true}
-        timestamp={new Date().toLocaleTimeString()}
-        show={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-      />
     </CRow>
   )
 }

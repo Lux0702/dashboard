@@ -5,8 +5,9 @@ const Select = () => {
   const [categoryName, setCategoryName] = useState('')
   const [alert, setAlert] = useState(null)
   const handleAddCategory = async () => {
-    const token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTc0NWU3NWYyYWQ0OWVhYjdlZDdkMzAiLCJpYXQiOjE3MDI2NjI4MDIsImV4cCI6MTcwMjY2NDYwMn0.LkuxhGJvDdN8wwTnlZFnfu8rNdVI01eGeG88RV-xw-M'
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
     try {
       const response = await fetch('http://localhost:3333/api/v1/categories/add', {
         method: 'POST',
@@ -21,13 +22,15 @@ const Select = () => {
 
       if (response.ok) {
         setAlert({ color: 'success', message: 'Thêm thể loại thành công' })
+        setCategoryName('')
+        setTimeout(() => setAlert(null), 1000)
       } else {
         const errorData = await response.json()
         setAlert({ color: 'danger', message: errorData.message || 'Có lỗi xảy ra' })
       }
     } catch (error) {
       console.error('Error adding category:', error)
-      setAlert({ color: 'danger', message: 'Có lỗi xảy ra' })
+      setAlert({ color: 'danger', message: 'Lỗi kết nối' })
     }
   }
   return (

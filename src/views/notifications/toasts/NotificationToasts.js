@@ -1,35 +1,15 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import { CToast, CToastHeader, CToastBody } from '@coreui/react'
+// Notification.js
+import React, { useRef, useState } from 'react'
+import { CToaster, CToast, CToastHeader, CToastBody } from '@coreui/react'
 
-const CustomToast = ({ title, body, closeButton, timestamp }) => (
-  <CToast>
-    <CToastHeader closeButton={closeButton}>
-      {title && (
-        <svg
-          className="rounded me-2"
-          width="20"
-          height="20"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="xMidYMid slice"
-          focusable="false"
-          role="img"
-        >
-          <rect width="100%" height="100%" fill="#007aff" />
-        </svg>
-      )}
-      {title && <strong className="me-auto">{title}</strong>}
-      {timestamp && <small>{timestamp}</small>}
-    </CToastHeader>
-    {body && <CToastBody>{body}</CToastBody>}
-  </CToast>
-)
+export const useNotification = () => {
+  const toaster = useRef()
 
-CustomToast.propTypes = {
-  title: PropTypes.string,
-  body: PropTypes.string,
-  closeButton: PropTypes.bool,
-  timestamp: PropTypes.string,
+  const showToast = (message, isSuccess) => {
+    if (toaster.current) {
+      toaster.current.showToast(message, isSuccess)
+    }
+  }
+
+  return { showToast }
 }
-
-export default CustomToast

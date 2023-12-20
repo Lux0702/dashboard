@@ -66,6 +66,18 @@ const _nav = [
       },
     ],
   },
+  {
+    component: CNavGroup,
+    name: 'Thống kê',
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Thống kê bán hàng',
+        to: '/notifications/modals',
+      },
+    ],
+  },
 ]
 
 export default _nav
