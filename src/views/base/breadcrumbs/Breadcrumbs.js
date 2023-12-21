@@ -168,7 +168,10 @@ const Breadcrumbs = () => {
         })
         if (response.ok) {
           const order = await response.json()
-          setOrders(order.data)
+          const sortedOrders = [...order.data].sort(
+            (a, b) => new Date(b.orderDate) - new Date(a.orderDate),
+          )
+          setOrders(sortedOrders)
         } else {
           console.error('Error fetching orders:', response.statusText)
         }
@@ -230,7 +233,7 @@ const Breadcrumbs = () => {
                 <CTableRow>
                   <CTableHeaderCell scope="col">*</CTableHeaderCell>
                   <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Tên người mua</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Tên người nhận</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Số điện thoại</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Địa chỉ</CTableHeaderCell>
                   <CTableHeaderCell scope="col">Ngày đặt hàng</CTableHeaderCell>
@@ -395,20 +398,25 @@ const Breadcrumbs = () => {
                       <p>Các mặt hàng:</p>
                       <CAccordion flush>
                         {orderDetail &&
-                          orderDetail.orderItems &&
-                          orderDetail.orderItems.map((item, index) => (
+                          orderDetail.items &&
+                          orderDetail.items.map((item, index) => (
                             <CAccordionItem key={index}>
                               <CAccordionHeader>
-                                {index + 1}. {item.book}
+                                {index + 1}. {item.book.title}
                               </CAccordionHeader>
                               <CAccordionBody>
                                 <p>
-                                  <strong>Mã sản phẩm:</strong> {item.book}
+                                  <strong>Mã sản phẩm:</strong> {item.book._id}
                                 </p>
                                 <p>
                                   <strong>Số lượng:</strong> {item.quantity}
                                 </p>
-                                {/* Thêm các thông tin khác cần hiển thị */}
+                                <p>
+                                  <strong>Giá tiền:</strong> {item.book.price}
+                                </p>
+                                <p>
+                                  <strong>Thành tiền:</strong> {item.book.price * item.quantity}
+                                </p>
                               </CAccordionBody>
                             </CAccordionItem>
                           ))}

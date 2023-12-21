@@ -492,6 +492,20 @@ const Tables = () => {
             >
               <CModalHeader closeButton>
                 <CModalTitle>Chi tiết sản phẩm</CModalTitle>
+                <div style={{ marginLeft: '450px' }}>
+                  <CButton color="primary" onClick={handleEditForm}>
+                    Sửa
+                  </CButton>
+                  <CButton
+                    style={{ marginLeft: '10px' }}
+                    color="danger"
+                    onClick={() => {
+                      handleDelete(selectedRowId)
+                    }}
+                  >
+                    Xóa
+                  </CButton>
+                </div>
               </CModalHeader>
               <CModalBody>
                 {/* Render product details here */}
@@ -695,17 +709,6 @@ const Tables = () => {
                   onClick={() => handleUploadBook(selectedRowId)}
                 >
                   Lưu
-                </CButton>
-                <CButton color="primary" onClick={handleEditForm}>
-                  Sửa
-                </CButton>
-                <CButton
-                  color="danger"
-                  onClick={() => {
-                    handleDelete(selectedRowId)
-                  }}
-                >
-                  Xóa
                 </CButton>
               </CModalFooter>
             </CModal>
