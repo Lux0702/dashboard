@@ -1,0 +1,8 @@
+.icon-access:hover {
+  transform: scale(1.5);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+.icon-access {
+  margin: 10px;
+}

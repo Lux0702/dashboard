@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CAlert,
   CAlertHeading,
@@ -8,135 +8,84 @@ import {
   CCardHeader,
   CCol,
   CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
 } from '@coreui/react'
-import { DocsExample } from 'src/components'
+import CIcon from '@coreui/icons-react'
+import * as icon from '@coreui/icons'
 
 const Alerts = () => {
+  const [posts, setPosts] = useState([])
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const userInfoString = localStorage.getItem('userInfo')
+      const userInfo = JSON.parse(userInfoString)
+      const token = userInfo.data.accessToken
+      try {
+        const response = await fetch('http://localhost:3333/api/v1/posts', {
+          method: 'GET',
+        })
+        if (response.ok) {
+          const order = await response.json()
+          const sortedOrders = [...order.data].sort(
+            (a, b) => new Date(b.orderDate) - new Date(a.orderDate),
+          )
+          setPosts(sortedOrders)
+        } else {
+          console.error('Error fetching orders:', response.statusText)
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+      }
+    }
+    fetchOrders()
+  }, [])
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-CA')
+  }
   return (
     <CRow>
       <CCol xs={12}>
         <CCard className="mb-4">
           <CCardHeader>
-            <strong>React Alert</strong>
+            <strong>Thống kê bài viết</strong>
           </CCardHeader>
           <CCardBody>
-            <p className="text-medium-emphasis small">
-              React Alert is prepared for any length of text, as well as an optional close button.
-              For a styling, use one of the <strong>required</strong> contextual <code>color</code>{' '}
-              props (e.g., <code>primary</code>). For inline dismissal, use the{' '}
-              <a href="https://coreui.io/react/docs/4.0/components/alert#dismissing">
-                dismissing prop
-              </a>
-              .
-            </p>
-            <DocsExample href="components/alert">
-              <CAlert color="primary">A simple primary alert—check it out!</CAlert>
-              <CAlert color="secondary">A simple secondary alert—check it out!</CAlert>
-              <CAlert color="success">A simple success alert—check it out!</CAlert>
-              <CAlert color="danger">A simple danger alert—check it out!</CAlert>
-              <CAlert color="warning">A simple warning alert—check it out!</CAlert>
-              <CAlert color="info">A simple info alert—check it out!</CAlert>
-              <CAlert color="light">A simple light alert—check it out!</CAlert>
-              <CAlert color="dark">A simple dark alert—check it out!</CAlert>
-            </DocsExample>
-          </CCardBody>
-        </CCard>
-      </CCol>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>React Alert</strong> <small>Link color</small>
-          </CCardHeader>
-          <CCardBody>
-            <p className="text-medium-emphasis small">
-              Use the <code>&lt;CAlertLink&gt;</code> component to immediately give matching colored
-              links inside any alert.
-            </p>
-            <DocsExample href="components/alert#link-color">
-              <CAlert color="primary">
-                A simple primary alert with <CAlertLink href="#">an example link</CAlertLink>. Give
-                it a click if you like.
-              </CAlert>
-              <CAlert color="secondary">
-                A simple secondary alert with <CAlertLink href="#">an example link</CAlertLink>.
-                Give it a click if you like.
-              </CAlert>
-              <CAlert color="success">
-                A simple success alert with <CAlertLink href="#">an example link</CAlertLink>. Give
-                it a click if you like.
-              </CAlert>
-              <CAlert color="danger">
-                A simple danger alert with <CAlertLink href="#">an example link</CAlertLink>. Give
-                it a click if you like.
-              </CAlert>
-              <CAlert color="warning">
-                A simple warning alert with <CAlertLink href="#">an example link</CAlertLink>. Give
-                it a click if you like.
-              </CAlert>
-              <CAlert color="info">
-                A simple info alert with <CAlertLink href="#">an example link</CAlertLink>. Give it
-                a click if you like.
-              </CAlert>
-              <CAlert color="light">
-                A simple light alert with <CAlertLink href="#">an example link</CAlertLink>. Give it
-                a click if you like.
-              </CAlert>
-              <CAlert color="dark">
-                A simple dark alert with <CAlertLink href="#">an example link</CAlertLink>. Give it
-                a click if you like.
-              </CAlert>
-            </DocsExample>
-          </CCardBody>
-        </CCard>
-      </CCol>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>React Alert</strong> <small>Additional content</small>
-          </CCardHeader>
-          <CCardBody>
-            <p className="text-medium-emphasis small">
-              Alert can also incorporate supplementary components &amp; elements like heading,
-              paragraph, and divider.
-            </p>
-            <DocsExample href="components/alert#additional-content">
-              <CAlert color="success">
-                <CAlertHeading tag="h4">Well done!</CAlertHeading>
-                <p>
-                  Aww yeah, you successfully read this important alert message. This example text is
-                  going to run a bit longer so that you can see how spacing within an alert works
-                  with this kind of content.
-                </p>
-                <hr />
-                <p className="mb-0">
-                  Whenever you need to, be sure to use margin utilities to keep things nice and
-                  tidy.
-                </p>
-              </CAlert>
-            </DocsExample>
-          </CCardBody>
-        </CCard>
-      </CCol>
-      <CCol xs={12}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>React Alert</strong> <small>Dismissing</small>
-          </CCardHeader>
-          <CCardBody>
-            <p className="text-medium-emphasis small">
-              Alerts can also be easily dismissed. Just add the <code>dismissible</code> prop.
-            </p>
-            <DocsExample href="components/alert#dismissing">
-              <CAlert
-                color="warning"
-                dismissible
-                onClose={() => {
-                  alert('👋 Well, hi there! Thanks for dismissing me.')
-                }}
-              >
-                <strong>Go right ahead</strong> and click that dimiss over there on the right.
-              </CAlert>
-            </DocsExample>
+            <CTable>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell scope="col">*</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Tên người đăng</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Tiêu đề</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Nội dung</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Ngày đăng</CTableHeaderCell>
+                  <CTableHeaderCell scope="col">Trạng thái</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {posts.map((post, index) => (
+                  <CTableRow key={index}>
+                    <CTableDataCell>
+                      <CIcon icon={icon.cilList} size="xl" />
+                    </CTableDataCell>
+                    <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                    <CTableDataCell>{post.length}</CTableDataCell>
+                    <CTableDataCell>{formatDate(post.postDate)}</CTableDataCell>
+                    <CTableDataCell>{formatDate(post.postDate)}</CTableDataCell>
+                  </CTableRow>
+                ))}
+              </CTableBody>
+            </CTable>
           </CCardBody>
         </CCard>
       </CCol>

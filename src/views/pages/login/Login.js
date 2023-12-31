@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CButton,
@@ -15,13 +15,56 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
+import { API_BASE_URL } from 'src/constant'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { Spin, Tabs } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { SettingsPhoneRounded } from '@mui/icons-material'
 
 const Login = () => {
+  const [username, setUsername] = useState('')
+  const [passWord, setPassword] = useState('')
+  const [spinning, setSpinning] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogin = async () => {
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: username,
+          passWord: passWord,
+        }),
+      })
+      if (response.ok) {
+        const Data = await response.json()
+        const successMessage = Data.message || 'Đăng nhập thành công.'
+        console.log('Đăng nhập thành công')
+        localStorage.setItem('userInfo', JSON.stringify(Data))
+        console.log(localStorage.getItem('userInfo'))
+        toast.success(successMessage)
+        setTimeout(() => {
+          navigate('/')
+        }, 1000)
+      } else {
+        console.error('Login failed:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error during login:', error)
+    } finally {
+      setSpinning(false)
+    }
+  }
   return (
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
         <CRow className="justify-content-center">
-          <CCol md={8}>
+          <CCol md={4}>
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
@@ -32,7 +75,14 @@ const Login = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput placeholder="Username" autoComplete="username" />
+                      <CFormInput
+                        placeholder="Username"
+                        autoComplete="username"
+                        value={username}
+                        onChange={(e) => {
+                          setUsername(e.target.value)
+                        }}
+                      />
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
@@ -42,11 +92,15 @@ const Login = () => {
                         type="password"
                         placeholder="Password"
                         autoComplete="current-password"
+                        value={passWord}
+                        onChange={(e) => {
+                          setPassword(e.target.value)
+                        }}
                       />
                     </CInputGroup>
                     <CRow>
                       <CCol xs={6}>
-                        <CButton color="primary" className="px-4">
+                        <CButton color="primary" className="px-4" onClick={handleLogin}>
                           Login
                         </CButton>
                       </CCol>
@@ -59,7 +113,7 @@ const Login = () => {
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              {/* <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
                     <h2>Sign up</h2>
@@ -74,11 +128,24 @@ const Login = () => {
                     </Link>
                   </div>
                 </CCardBody>
-              </CCard>
+              </CCard> */}
             </CCardGroup>
           </CCol>
         </CRow>
       </CContainer>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <Spin spinning={spinning} fullscreen />
     </div>
   )
 }

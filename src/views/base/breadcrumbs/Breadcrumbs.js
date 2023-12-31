@@ -3,6 +3,7 @@ import {
   CBreadcrumb,
   CBreadcrumbItem,
   CCard,
+  CBadge,
   CCardBody,
   CCardHeader,
   CCol,
@@ -38,6 +39,9 @@ import CIcon from '@coreui/icons-react'
 import * as icon from '@coreui/icons'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { API_BASE_URL } from 'src/constant'
+import { Spin, Tabs } from 'antd'
+import { formatCurrency, formatDate, formatDateV2 } from 'src/utils/formatCurrent'
 const Breadcrumbs = () => {
   const [books, setBooks] = useState([])
   const [orders, setOrders] = useState([])
@@ -47,11 +51,12 @@ const Breadcrumbs = () => {
   const [selectedRowId, setSelectedRowId] = useState(null)
   const [orderDetail, setOrderDetail] = useState(null)
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  const [spinning, setSpinning] = useState(false)
   const [statusOptions, setStatusOptions] = useState([
-    { status: 'Đã xác nhận', color: 'blue' },
-    { status: 'Đang giao', color: 'orange' },
-    { status: 'Đã giao', color: 'green' },
-    { status: 'Chờ xác nhận', color: 'gray' },
+    { status: 'PROCESSING', color: 'blue' },
+    { status: 'DELIVERING', color: 'orange' },
+    { status: 'DELIVERED', color: 'green' },
+    { status: 'PENDING', color: 'gray' },
   ])
   const resetRow = () => {
     setSelectedRowId(null)
@@ -68,7 +73,7 @@ const Breadcrumbs = () => {
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/users', {
+        const response = await fetch(`${API_BASE_URL}/admin/dashboard/users`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -91,10 +96,10 @@ const Breadcrumbs = () => {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch('http://localhost:3333/api/v1/books')
+        const response = await fetch(`${API_BASE_URL}/books`)
         if (response.ok) {
           const book = await response.json()
-          setBooks(book.data.data)
+          setBooks(book.data)
           console.log('Get data success', books)
         } else {
           console.error('Error fetching books:', response.statusText)
@@ -112,8 +117,8 @@ const Breadcrumbs = () => {
       const userInfoString = localStorage.getItem('userInfo')
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
-      console.log(selectedItemId)
-      const response = await fetch(`http://localhost:3333/api/v1/orders/${selectedItemId}`, {
+      console.log('id và token:', selectedItemId, token)
+      const response = await fetch(`${API_BASE_URL}/orders/${selectedItemId}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -122,7 +127,7 @@ const Breadcrumbs = () => {
       if (response.ok) {
         const Details = await response.json()
         setOrderDetail(Details.data)
-        const foundUser = users.find((user) => user._id === orderDetail.user)
+        const foundUser = users.find((user) => user.userId === orderDetail.user)
         const foundBooks = orderDetail.orderItems.map((orderItem) => {
           return books.find((book) => book._id === orderItem.book)
         })
@@ -133,10 +138,10 @@ const Breadcrumbs = () => {
         setIsOrderModalOpen(true)
         console.log('get detail success')
       } else {
-        console.error('Error fetching product details:', response.statusText)
+        console.error('lấy dữ liệu thấy bại:', response.statusText)
       }
     } catch (error) {
-      console.error('Error fetching product details:', error)
+      console.error('Lỗi kết nối:', error)
     }
   }
   const handleStatusChange = (selectedStatus) => {
@@ -160,7 +165,8 @@ const Breadcrumbs = () => {
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/orders', {
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/orders`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -177,14 +183,13 @@ const Breadcrumbs = () => {
         }
       } catch (error) {
         console.error('Error fetching orders:', error)
+      } finally {
+        setSpinning(false)
       }
     }
     fetchOrders()
   }, [])
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-CA')
-  }
+
   //custom dropdown
   const vars = {
     '--cui-dropdown-border': 'none',
@@ -198,7 +203,7 @@ const Breadcrumbs = () => {
     const token = userInfo.data.accessToken
 
     try {
-      const response = await fetch(`http://localhost:3333/api/v1/orders/${orderId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -261,8 +266,8 @@ const Breadcrumbs = () => {
                     <CTableDataCell>{order.fullName}</CTableDataCell>
                     <CTableDataCell>{order.phone}</CTableDataCell>
                     <CTableDataCell>{order.address}</CTableDataCell>
-                    <CTableDataCell>{order.orderDate}</CTableDataCell>
-                    <CTableDataCell>{order.totalAmount}</CTableDataCell>
+                    <CTableDataCell>{formatDate(order.orderDate)}</CTableDataCell>
+                    <CTableDataCell>{formatCurrency(order.totalAmount) || 0}</CTableDataCell>
                     <CTableDataCell>
                       <CDropdown variant="btn-group" style={{ borderRadius: '12px' }}>
                         <CDropdownToggle
@@ -304,7 +309,21 @@ const Breadcrumbs = () => {
               }}
             >
               <CModalHeader closeButton>
-                <CModalTitle>Chi tiết đơn hàng</CModalTitle>
+                <CModalTitle>
+                  Chi tiết đơn hàng <br />
+                  <CBadge color="info">
+                    <small style={{ fontSize: '10px' }}>
+                      <em>
+                        {orderDetail &&
+                          (orderDetail.paymentStatus
+                            ? orderDetail.paymentStatus === 'NOT_PAID'
+                              ? 'Chưa thanh toán'
+                              : 'Đã thanh toán'
+                            : '')}
+                      </em>
+                    </small>
+                  </CBadge>
+                </CModalTitle>
               </CModalHeader>
               <CModalBody>
                 {/* Render product details here */}
@@ -328,7 +347,7 @@ const Breadcrumbs = () => {
                               type="text"
                               id="totalAmount"
                               name="totalAmount"
-                              value={orderDetail.totalAmount || ''}
+                              value={formatCurrency(orderDetail.totalAmount) || ''}
                             />
                             <CInputGroupText>VNĐ</CInputGroupText>
                           </CInputGroup>
@@ -340,7 +359,7 @@ const Breadcrumbs = () => {
                             type="date"
                             id="orderDate"
                             name="orderDate"
-                            value={formatDate(orderDetail.orderDate)}
+                            value={formatDateV2(orderDetail.orderDate)}
                           />
                         </CCol>
                       </CRow>
@@ -392,14 +411,28 @@ const Breadcrumbs = () => {
                             value={orderDetail.address}
                           />
                         </CCol>
+                        <CCol xs="6" className="mb-3">
+                          <CFormLabel htmlFor="paymentMethod">Phương thức thanh toán</CFormLabel>
+                          <CFormInput
+                            disabled
+                            type="text"
+                            id="paymentMethod"
+                            name="paymentMethod"
+                            value={
+                              (orderDetail.paymentMethod === 'ON_DELIVERY'
+                                ? 'Thanh toán khi nhận hàng - COD'
+                                : 'Thanh toán online') || 0
+                            }
+                          />
+                        </CCol>
                       </CRow>
                     </div>
                     <div>
                       <p>Các mặt hàng:</p>
                       <CAccordion flush>
                         {orderDetail &&
-                          orderDetail.items &&
-                          orderDetail.items.map((item, index) => (
+                          orderDetail.orderItems &&
+                          orderDetail.orderItems.map((item, index) => (
                             <CAccordionItem key={index}>
                               <CAccordionHeader>
                                 {index + 1}. {item.book.title}
@@ -412,10 +445,11 @@ const Breadcrumbs = () => {
                                   <strong>Số lượng:</strong> {item.quantity}
                                 </p>
                                 <p>
-                                  <strong>Giá tiền:</strong> {item.book.price}
+                                  <strong>Giá tiền:</strong> {formatCurrency(item.book.price) || 0}
                                 </p>
                                 <p>
-                                  <strong>Thành tiền:</strong> {item.book.price * item.quantity}
+                                  <strong>Thành tiền:</strong>{' '}
+                                  {formatCurrency(item.book.price * item.quantity) || 0}
                                 </p>
                               </CAccordionBody>
                             </CAccordionItem>
@@ -443,6 +477,7 @@ const Breadcrumbs = () => {
         pauseOnHover
         theme="light"
       />
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }

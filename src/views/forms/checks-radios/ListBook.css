@@ -1,24 +1,24 @@
-.change-btn{
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    margin-right: 5px;
-    margin-top: 10px;
+.change-btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  margin-right: 5px;
+  margin-top: 10px;
 }
-.edit-buton{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content:space-around;
+.edit-buton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
 }
-.edit-btn{
-    width: 100px;
-    height: auto;
+.edit-btn {
+  width: 100px;
+  height: auto;
 }
-.edit-btn:hover{
-    background-color:rgb(228, 83, 83);
-    border: none;
+.edit-btn:hover {
+  background-color: rgb(228, 83, 83);
+  border: none;
 }
 .custom-button[disabled] {
-    background-color: #313437
-  }
+  background-color: #313437;
+}

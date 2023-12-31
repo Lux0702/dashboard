@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
+import { API_BASE_URL } from 'src/constant'
 
 const DefaultLayout = () => {
   useEffect(() => {
@@ -12,7 +13,7 @@ const DefaultLayout = () => {
     const login = async () => {
       try {
         // Make a POST request to the login API
-        const response = await fetch('http://localhost:3333/api/v1/auth/login', {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

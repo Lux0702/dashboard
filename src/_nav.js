@@ -29,18 +29,18 @@ const _nav = [
   {
     component: CNavGroup,
     name: 'Quản lí khách hàng',
-    to: '/base',
+    to: '/customerManager',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
     items: [
       {
         component: CNavItem,
         name: 'Danh sách khách hàng',
-        to: '/base/accordion',
+        to: 'customerManager/customer-list',
       },
       {
         component: CNavItem,
         name: 'Đơn hàng',
-        to: '/base/breadcrumbs',
+        to: '/base/Order',
       },
     ],
   },
@@ -52,17 +52,29 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Thêm sản phẩm',
-        to: '/forms/form-control',
+        to: '/product/AddNew',
       },
       {
         component: CNavItem,
-        name: 'Thêm thể loại',
-        to: '/forms/select',
+        name: 'Thể loại/ tác giả',
+        to: '/Product/Category',
       },
       {
         component: CNavItem,
         name: 'Danh sách sản phẩm',
-        to: '/forms/checks-radios',
+        to: '/Product/book-list',
+      },
+    ],
+  },
+  {
+    component: CNavGroup,
+    name: 'Quản lí bài viết',
+    icon: <CIcon icon={cilNotes} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Duyệt bài viết',
+        to: '/ManagePost/Post',
       },
     ],
   },
@@ -75,6 +87,16 @@ const _nav = [
         component: CNavItem,
         name: 'Thống kê bán hàng',
         to: '/notifications/modals',
+      },
+      {
+        component: CNavItem,
+        name: 'Thống kê sản phẩm',
+        to: '/notifications/badges',
+      },
+      {
+        component: CNavItem,
+        name: 'Thống kê bài viết',
+        to: '/notifications/alerts',
       },
     ],
   },

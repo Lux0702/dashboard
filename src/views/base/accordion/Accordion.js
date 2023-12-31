@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   CCard,
   CCardBody,
@@ -22,68 +22,125 @@ import {
   CModalTitle,
   CButton,
 } from '@coreui/react'
-import { DocsExample } from 'src/components'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import CIcon from '@coreui/icons-react'
+import * as icon from '@coreui/icons'
+import './style.css'
+import { Spin, Tabs } from 'antd'
+import { API_BASE_URL } from 'src/constant'
 const Accordion = () => {
   const [users, setUsers] = useState([])
+  const [blacklist, setBlacklist] = useState([])
   const [selectedRowId, setSelectedRowId] = useState(null)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
-  const selectedUser = users.find((user) => user._id === selectedRowId)
   const [selectedDeleteId, setSelectedDeleteId] = useState(null)
   const [visible, setVisible] = useState(false)
-
+  const [visibleBlack, setVisibleBlack] = useState(false)
+  const [visibleRestore, setVisibleRestore] = useState(false)
+  const [selectedUser, setSelectUserr] = useState(null)
+  const [reason, setReason] = useState(null)
+  const [spinning, setSpinning] = useState(false)
+  const [activeTab, setActiveTab] = useState(0)
+  const toggleTab = (tabIndex) => {
+    setActiveTab(tabIndex)
+  }
   //Get all user
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/users', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const user = await response.json()
-          setUsers(user.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
+  const fetchUsers = async () => {
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard/users`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const user = await response.json()
+        setUsers(user.data)
+      } else {
+        console.error('Error fetching users:', response.statusText)
       }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setSpinning(false)
     }
+  }
+  useEffect(() => {
     fetchUsers()
+  }, [])
+  //Get blacklist
+  const fetchBlacklist = async () => {
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
+
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/blacklist`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const blacklistData = await response.json()
+        setBlacklist(blacklistData.data)
+      } else {
+        console.error('Error fetching blacklist:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching blacklist:', error)
+    } finally {
+      setSpinning(false)
+    }
+  }
+  useEffect(() => {
+    fetchBlacklist()
   }, [])
   useEffect(() => {
     if (!isUserModalOpen) {
       setSelectedRowId(null)
     }
   }, [isUserModalOpen])
-  //Get user detail
-  useEffect(() => {
-    if (selectedRowId) {
-      setIsUserModalOpen(true)
-    }
-  }, [selectedRowId])
+  // //Get user detail
+  // useEffect(() => {
+  //   if (selectedRowId) {
+  //     setIsUserModalOpen(true)
+  //   }
+  // }, [selectedRowId])
   const handleRowClick = (id) => {
     setSelectedRowId(id)
     console.log(id)
-    //setIsPopupOpen(true)
-    //handleShowProduct(selectedRowId)
+    setSelectUserr(users.find((user) => user.userId === id))
+    setIsUserModalOpen(true)
   }
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-CA')
   }
   //Delete user
-  const handleDelete = async (selectedRowId) => {
+  const handleDelete = (selectedRowId) => {
     // Display confirmation modal
     setSelectedDeleteId(selectedRowId)
     setVisible(true)
+  }
+  const handleAddBlacklist = (selectedRowId) => {
+    // Display confirmation modal
+    console.log('id blacklist:', selectedRowId)
+    setSelectedDeleteId(selectedRowId)
+    setVisibleBlack(true)
+  }
+  const handleRestore = (selectedRowId) => {
+    // Display confirmation modal
+    console.log('id blacklist:', selectedRowId)
+    setSelectedDeleteId(selectedRowId)
+    setVisibleRestore(true)
   }
   //api xóa user
   const confirmDelete = async (selectedRowId) => {
@@ -94,19 +151,17 @@ const Accordion = () => {
     const token = userInfo.data.accessToken
     // Loop through selectedItems and send DELETE requests
     try {
-      const response = await fetch(
-        `http://localhost:3333/api/v1/admin/dashboard/users/${selectedRowId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard/users/${selectedRowId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      )
+      })
       if (response.ok) {
         console.log(`Book with ID ${selectedRowId} deleted successfully`)
         // Optionally, update the UI to remove the deleted items
-        setUsers((prevUsers) => prevUsers.filter((user) => user._id !== selectedRowId))
+        setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== selectedRowId))
         const data = await response.json()
         toast.success(data.message, {
           onClose: () => {
@@ -121,12 +176,113 @@ const Accordion = () => {
       }
     } catch (error) {
       toast.error(`Error deleting user with ID ${selectedRowId}:`, error)
+    } finally {
+      setSpinning(false)
+    }
+  }
+  //api add Black user
+  const confirmAddBlackList = async (selectedRowId) => {
+    console.log('id cần adđ:', selectedRowId)
+    console.log('reason:', reason)
+    setVisible(false)
+    console.log('Selected Row ID in confirmDelete:', selectedRowId)
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
+    // Loop through selectedItems and send DELETE requests
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/blacklist/add`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: selectedRowId,
+          reason: reason,
+        }),
+      })
+      if (response.ok) {
+        console.log(`Book with ID ${selectedRowId} deleted successfully`)
+        // Optionally, update the UI to remove the deleted items
+        setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== selectedRowId))
+        const data = await response.json()
+        setVisibleBlack(false)
+        toast.success(data.message, {
+          onClose: () => {
+            fetchBlacklist()
+            setSelectedDeleteId(null)
+          },
+        })
+      } else {
+        const data = await response.json()
+        toast.error(data.message)
+        console.error(`Error deleting user with ID ${selectedRowId}:`, response.statusText)
+      }
+    } catch (error) {
+      toast.error(`Error deleting user with ID ${selectedRowId}:`, error)
+    } finally {
+      setSpinning(false)
+    }
+  }
+  //restore black
+  const confirmRestore = async (selectedRowId) => {
+    setVisible(false)
+    console.log('Selected Row ID in confirmDelete:', selectedRowId)
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
+    // Loop through selectedItems and send DELETE requests
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/blacklist/${selectedRowId}/restore`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        console.log(`Book with ID ${selectedRowId} deleted successfully`)
+        // Optionally, update the UI to remove the deleted items
+        setBlacklist((prevUsers) => prevUsers.filter((user) => user.id !== selectedRowId))
+        const data = await response.json()
+        setVisibleRestore(false)
+        toast.success(data.message, {
+          onClose: () => {
+            fetchBlacklist()
+            setSelectedDeleteId(null)
+          },
+        })
+      } else {
+        const data = await response.json()
+        toast.error(data.message)
+        console.error(`Error deleting user with ID ${selectedRowId}:`, response.statusText)
+      }
+    } catch (error) {
+      toast.error(`Error deleting user with ID ${selectedRowId}:`, error)
+    } finally {
+      setSpinning(false)
     }
   }
   const cancelDelete = () => {
     // Close modal without performing deletion
     setVisible(false)
     console.log('Selected Row ID in handleDelete:', selectedRowId)
+  }
+  const cancelBlack = () => {
+    // Close modal without performing deletion
+    setVisibleBlack(false)
+    console.log('Selected Row ID in handleDelete:', selectedRowId)
+  }
+  const cancelRestore = () => {
+    // Close modal without performing deletion
+    setVisibleRestore(false)
+  }
+  const handleInputReason = (e) => {
+    // Handle changes in the input fields
+    const { name, value } = e.target
+    setReason(value)
   }
   return (
     <CRow>
@@ -136,36 +292,120 @@ const Accordion = () => {
             <strong>Danh sách khách hàng</strong>
           </CCardHeader>
           <CCardBody>
-            <CTable>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell scope="col">#</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Tên người dùng</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Email</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Vai trò</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Số điện thoại</CTableHeaderCell>
-                  <CTableHeaderCell scope="col">Điểm tích lũy</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {users.map((user, index) => (
-                  <CTableRow
-                    key={index}
-                    active={selectedRowId === user._id}
-                    onClick={(e) => {
-                      handleRowClick(user._id)
-                    }}
-                  >
-                    <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                    <CTableDataCell>{user.fullName}</CTableDataCell>
-                    <CTableDataCell>{user.email}</CTableDataCell>
-                    <CTableDataCell>{user.role}</CTableDataCell>
-                    <CTableDataCell>{user.phone}</CTableDataCell>
-                    <CTableDataCell>{user.points}</CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
+            <Tabs
+              defaultActiveKey="1"
+              type="card"
+              size={'large'}
+              items={[
+                {
+                  label: 'Danh sách người dùng',
+                  key: '1',
+                  children: (
+                    <CTable>
+                      <CTableHead>
+                        <CTableRow>
+                          <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Tên người dùng</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Email</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Vai trò</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Số điện thoại</CTableHeaderCell>
+                          <CTableHeaderCell scope="col" style={{ textAlign: 'center' }}>
+                            Tác vụ
+                          </CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+                      <CTableBody>
+                        {users.map((user, index) => (
+                          <CTableRow
+                            key={index}
+                            active={selectedRowId === user.userId}
+                            // onClick={() => handleRowClick(user._id)}
+                          >
+                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                            <CTableDataCell>{user.fullName}</CTableDataCell>
+                            <CTableDataCell>{user.email}</CTableDataCell>
+                            <CTableDataCell>{user.role}</CTableDataCell>
+                            <CTableDataCell>{user.phone}</CTableDataCell>
+                            <CTableDataCell style={{ textAlign: 'center' }}>
+                              <CIcon
+                                icon={icon.cilPencil} // Sử dụng biểu tượng xóa từ thư viện
+                                size="lg" // Kích thước của biểu tượng (có thể là 'sm', 'md', 'lg', 'xl', ...)
+                                className="text-danger cursor-pointer icon-access" // CSS classes khác (nếu cần)
+                                onClick={() => {
+                                  handleRowClick(user.userId)
+                                }}
+                              />
+                              <CIcon
+                                icon={icon.cilNotes} // Sử dụng biểu tượng sửa từ thư viện
+                                size="lg" // Kích thước của biểu tượng (có thể là 'sm', 'md', 'lg', 'xl', ...)
+                                className="text-primary cursor-pointer icon-access" // CSS classes khác (nếu cần)
+                                onClick={() => {
+                                  handleAddBlacklist(user.userId)
+                                }}
+                              />
+                              <CIcon
+                                icon={icon.cilTrash} // Sử dụng biểu tượng sửa từ thư viện
+                                size="lg" // Kích thước của biểu tượng (có thể là 'sm', 'md', 'lg', 'xl', ...)
+                                className="text-primary cursor-pointer icon-access" // CSS classes khác (nếu cần)
+                                onClick={() => {
+                                  handleDelete(user.userId)
+                                  console.log(user.userId)
+                                }}
+                              />
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  ),
+                },
+                {
+                  label: 'Danh sách blacklist',
+                  key: '2',
+                  children: (
+                    <CTable>
+                      <CTableHead>
+                        <CTableRow>
+                          <CTableHeaderCell scope="col">#</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Tên người dùng</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Email</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Vai trò</CTableHeaderCell>
+                          <CTableHeaderCell scope="col">Số điện thoại</CTableHeaderCell>
+                          <CTableHeaderCell scope="col" style={{ textAlign: 'center' }}>
+                            Tác vụ
+                          </CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+                      <CTableBody>
+                        {blacklist.map((user, index) => (
+                          <CTableRow
+                            key={index}
+                            active={selectedRowId === user.id}
+                            // onClick={() => handleRowClick(user._id)}
+                          >
+                            <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                            <CTableDataCell>{user.userInfo.fullName}</CTableDataCell>
+                            <CTableDataCell>{user.userInfo.email}</CTableDataCell>
+                            <CTableDataCell>{user.userInfo.role}</CTableDataCell>
+                            <CTableDataCell>{user.userInfo.phone}</CTableDataCell>
+                            <CTableDataCell style={{ textAlign: 'center' }}>
+                              <CIcon
+                                icon={icon.cilShareBoxed} // Sử dụng biểu tượng xóa từ thư viện
+                                size="lg" // Kích thước của biểu tượng (có thể là 'sm', 'md', 'lg', 'xl', ...)
+                                className="text-danger cursor-pointer icon-access" // CSS classes khác (nếu cần)
+                                onClick={() => {
+                                  handleRestore(user.id)
+                                }}
+                              />
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  ),
+                },
+              ]}
+            />
             {/* Thông tin chi tiết */}
             <CModal
               size="lg"
@@ -320,6 +560,68 @@ const Accordion = () => {
                 </CButton>
               </CModalFooter>
             </CModal>
+            {/* Thông báo đưa vào blacklist */}
+            <CModal
+              alignment="center"
+              visible={visibleBlack}
+              onClose={() => setVisibleBlack(false)}
+              aria-labelledby="DeleteConfirmationModal"
+            >
+              <CModalHeader closeButton>
+                <CModalTitle id="DeleteConfirmationModal">Thêm vào blacklist</CModalTitle>
+              </CModalHeader>
+              <CModalBody>
+                Bạn có chắc muốn thêm vào blacklist ? <br />
+                <CFormInput
+                  aria-label="blacklist"
+                  placeholder="Nhập lí do thêm vào blacklist"
+                  type="text"
+                  id="blacklist"
+                  name="blacklist"
+                  onChange={handleInputReason}
+                />
+              </CModalBody>
+              <CModalFooter>
+                <CButton color="secondary" onClick={cancelBlack}>
+                  Hủy
+                </CButton>
+                <CButton
+                  color="danger"
+                  onClick={() => {
+                    confirmAddBlackList(selectedDeleteId)
+                  }}
+                >
+                  Xóa
+                </CButton>
+              </CModalFooter>
+            </CModal>
+            {/* Thông báo restore */}
+            <CModal
+              alignment="center"
+              visible={visibleRestore}
+              onClose={() => setVisibleRestore(false)}
+              aria-labelledby="DeleteConfirmationModal"
+            >
+              <CModalHeader closeButton>
+                <CModalTitle id="DeleteConfirmationModal">Khôi phục người dùng</CModalTitle>
+              </CModalHeader>
+              <CModalBody>
+                Bạn có chắc muốn khôi phục người dùng ? <br />
+              </CModalBody>
+              <CModalFooter>
+                <CButton color="secondary" onClick={cancelRestore}>
+                  Hủy
+                </CButton>
+                <CButton
+                  color="success"
+                  onClick={() => {
+                    confirmRestore(selectedDeleteId)
+                  }}
+                >
+                  Khôi phục
+                </CButton>
+              </CModalFooter>
+            </CModal>
           </CCardBody>
         </CCard>
       </CCol>
@@ -335,6 +637,7 @@ const Accordion = () => {
         pauseOnHover
         theme="light"
       />
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }

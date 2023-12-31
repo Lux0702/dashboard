@@ -32,6 +32,9 @@ import Select from 'react-select'
 import './ListBook.css'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { API_BASE_URL } from 'src/constant'
+import { Spin, Tabs } from 'antd'
+
 const Tables = () => {
   const [books, setBooks] = useState([])
   const [selectedItems, setSelectedItems] = useState([])
@@ -49,6 +52,7 @@ const Tables = () => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [selectedDeleteId, setSelectedDeleteId] = useState(null)
+  const [spinning, setSpinning] = useState(false)
   //info book
   const [formData, setFormData] = useState({
     title: '',
@@ -66,22 +70,22 @@ const Tables = () => {
   })
   //Truyền data vào formData
   useEffect(() => {
-    if (productDetails && productDetails.bookDTO) {
-      const { title, categories, stock, authors, price, image } = productDetails.bookDTO
+    if (productDetails) {
+      // const { title, categories, stock, authors, price, image } = productDetails
       // Tiếp tục với logic set giá trị cho formData
       setFormData({
-        title: title || '',
-        categories: categories || [],
-        stock: stock || 0,
-        authors: authors || [],
-        price: price || 0,
+        title: productDetails.title || '',
+        categories: productDetails.categories || [],
+        stock: productDetails.stock || 0,
+        authors: productDetails.authors || [],
+        price: productDetails.price || 0,
         isbn: productDetails.isbn || '',
         pageNumbers: productDetails.pageNumbers || '',
         publishedDate: productDetails.publishedDate || '',
         publisher: productDetails.publisher || '',
         language: productDetails.language || '',
         description: productDetails.description || '',
-        image: image || null,
+        image: productDetails.image || null,
       })
     }
   }, [productDetails])
@@ -95,32 +99,36 @@ const Tables = () => {
     if (!isProductModalOpen) {
       resetProductDetails()
       setIsEditMode(false)
+      setSelectedRowId(null)
     }
   }, [isProductModalOpen])
   //get all  book
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/books')
-        if (response.ok) {
-          const book = await response.json()
-          setBooks(book.data.data)
-          //console.log('Get data success', books)
-        } else {
-          console.error('Error fetching books:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching books:', error)
+  const fetchBooks = async () => {
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/books`)
+      if (response.ok) {
+        const book = await response.json()
+        setBooks(book.data)
+        //console.log('Get data success', books)
+      } else {
+        console.error('Error fetching books:', response.statusText)
       }
+    } catch (error) {
+      console.error('Error fetching books:', error)
+    } finally {
+      setSpinning(false)
     }
+  }
+  useEffect(() => {
     fetchBooks()
   }, [])
-
   //get all categoiesy/authors
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const categoryResponse = await fetch('http://localhost:3333/api/v1/categories')
+        setSpinning(true)
+        const categoryResponse = await fetch(`${API_BASE_URL}/categories`)
         if (categoryResponse.ok) {
           const categoryData = await categoryResponse.json()
           // In ra console để xem dữ liệu trả về từ API
@@ -139,7 +147,7 @@ const Tables = () => {
         } else {
           console.error('Không thể lấy dữ liệu từ API.')
         }
-        const authorResponse = await fetch('http://localhost:3333/api/v1/authors')
+        const authorResponse = await fetch(`${API_BASE_URL}/authors`)
         if (authorResponse.ok) {
           const authorData = await authorResponse.json()
           // In ra console để xem dữ liệu trả về từ API
@@ -160,6 +168,8 @@ const Tables = () => {
         }
       } catch (error) {
         console.error('Lỗi trong quá trình lấy dữ liệu từ API:', error)
+      } finally {
+        setSpinning(false)
       }
     }
 
@@ -211,7 +221,8 @@ const Tables = () => {
     const token = userInfo.data.accessToken
     // Loop through selectedItems and send DELETE requests
     try {
-      const response = await fetch(`http://localhost:3333/api/v1/books/${selectedRowId}`, {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/books/${selectedRowId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -235,6 +246,8 @@ const Tables = () => {
       }
     } catch (error) {
       toast.error(`Error deleting book with ID ${selectedRowId}:`, error)
+    } finally {
+      setSpinning(false)
     }
   }
   const cancelDelete = () => {
@@ -246,11 +259,12 @@ const Tables = () => {
   //detail book
   const handleShowProduct = async (selectedItemId) => {
     try {
+      setSpinning(true)
       console.log(selectedItemId)
-      const response = await fetch(`http://localhost:3333/api/v1/books/${selectedItemId}`)
+      const response = await fetch(`${API_BASE_URL}/books/${selectedItemId}`)
       if (response.ok) {
         const Details = await response.json()
-        setProductDetails(Details.data.data)
+        setProductDetails(Details.data)
         //console.log(selectedCategories)
         //console.log(Details)
         setIsProductModalOpen(true)
@@ -259,18 +273,20 @@ const Tables = () => {
       }
     } catch (error) {
       console.error('Error fetching product details:', error)
+    } finally {
+      setSpinning(false)
     }
   }
   useEffect(() => {
     if (productDetails) {
       setSelectedCategories(
-        productDetails.bookDTO.categories.map((category) => ({
+        productDetails.categories.map((category) => ({
           value: category.categoryName,
           label: category.categoryName,
         })) || [],
       )
       setSelectedAuthors(
-        productDetails.bookDTO.authors.map((author) => ({
+        productDetails.authors.map((author) => ({
           value: author.authorName,
           label: author.authorName,
         })) || [],
@@ -344,7 +360,8 @@ const Tables = () => {
       }
     }
     try {
-      const response = await fetch(`http://localhost:3333/api/v1/books/${selectedItemId}`, {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/books/${selectedItemId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -357,6 +374,7 @@ const Tables = () => {
         const data = await response.json()
         toast.success(data.message, {
           onClose: () => {
+            fetchBooks()
             setIsProductModalOpen(false)
           },
         })
@@ -366,6 +384,8 @@ const Tables = () => {
       }
     } catch (error) {
       toast.error('Lỗi trong quá trình xử lý yêu cầu:', error)
+    } finally {
+      setSpinning(false)
     }
   }
   const handleInputChange = (fieldName, value) => {
@@ -580,7 +600,7 @@ const Tables = () => {
                             type="text"
                             id="pageNumbers"
                             name="pageNumbers"
-                            placeholder="Nhập giá tiền"
+                            placeholder="Nhập số trang"
                             value={formData.pageNumbers}
                             onChange={(e) => handleInputChange('pageNumbers', e.target.value)}
                           />
@@ -727,6 +747,7 @@ const Tables = () => {
         pauseOnHover
         theme="light"
       />
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }
