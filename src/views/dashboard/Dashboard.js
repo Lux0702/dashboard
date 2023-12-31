@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-
+import { API_BASE_URL } from 'src/constant'
 import {
   CAvatar,
   CButton,
@@ -45,10 +45,12 @@ import {
 } from '@coreui/icons'
 import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsDropdown'
+import { Spin } from 'antd'
 
 const Dashboard = () => {
   const [statitic, setIsStatitic] = useState([])
   const [currentStats, setCurrentStats] = useState('daily')
+  const [spinning, setSpinning] = useState(false)
 
   const progressGroupExample1 = [
     { title: 'Monday', value1: 34, value2: 78 },
@@ -78,7 +80,8 @@ const Dashboard = () => {
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/statistics', {
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/admin/statistics`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -93,13 +96,15 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Error fetching users:', error)
+      } finally {
+        setSpinning(false)
       }
     }
     fetchStatitic()
   }, [])
   const data = {
     daily: {
-      labels: statitic.revenueStats?.daily ? Object.keys(statitic.revenueStats.daily) : [],
+      labels: statitic.data?.revenueByDay ? Object.keys(statitic.data.revenueByDay) : [],
       datasets: [
         {
           label: 'Daily Revenue',
@@ -107,8 +112,8 @@ const Dashboard = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.daily
-            ? Object.entries(statitic.revenueStats.daily).map(([day, value]) => {
+          data: statitic.data?.revenueByDay
+            ? Object.entries(statitic.data.revenueByDay).map(([day, value]) => {
                 console.log('Day:', day, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -118,7 +123,7 @@ const Dashboard = () => {
       ],
     },
     monthly: {
-      labels: statitic.revenueStats?.monthly ? Object.keys(statitic.revenueStats.monthly) : [],
+      labels: statitic.data?.revenueByMonth ? Object.keys(statitic.data.revenueByMonth) : [],
       datasets: [
         {
           label: 'Monthly Revenue',
@@ -126,8 +131,8 @@ const Dashboard = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.monthly
-            ? Object.entries(statitic.revenueStats.monthly).map(([month, value]) => {
+          data: statitic.data?.revenueByMonth
+            ? Object.entries(statitic.data.revenueByMonth).map(([month, value]) => {
                 console.log('Month:', month, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -137,7 +142,7 @@ const Dashboard = () => {
       ],
     },
     yearly: {
-      labels: statitic.revenueStats?.yearly ? Object.keys(statitic.revenueStats.yearly) : [],
+      labels: statitic.data?.revenueByYear ? Object.keys(statitic.data.revenueByYear) : [],
       datasets: [
         {
           label: 'Yearly Revenue',
@@ -145,8 +150,8 @@ const Dashboard = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.yearly
-            ? Object.entries(statitic.revenueStats.yearly).map(([year, value]) => {
+          data: statitic.data?.revenueByYear
+            ? Object.entries(statitic.data.revenueByYear).map(([year, value]) => {
                 console.log('Year:', year, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -245,6 +250,7 @@ const Dashboard = () => {
             }}
           />
         </CCardBody>
+        <Spin spinning={spinning} fullscreen />
       </CCard>
 
       {/* <WidgetsBrand withCharts /> */}

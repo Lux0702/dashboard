@@ -15,23 +15,31 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { DocsExample } from 'src/components'
+import { formatCurrency } from 'src/utils/formatCurrent'
+import { Spin } from 'antd'
+import { API_BASE_URL } from 'src/constant'
 
 const Badges = () => {
   const [books, setBooks] = useState([])
+  const [spinning, setSpinning] = useState(false)
+
   //get all  book
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch('http://localhost:3333/api/v1/books')
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/books`)
         if (response.ok) {
           const book = await response.json()
-          setBooks(book.data.data)
+          setBooks(book.data)
           //console.log('Get data success', books)
         } else {
           console.error('Error fetching books:', response.statusText)
         }
       } catch (error) {
         console.error('Error fetching books:', error)
+      } finally {
+        setSpinning(false)
       }
     }
     fetchBooks()
@@ -60,7 +68,7 @@ const Badges = () => {
                   <CTableRow key={index}>
                     <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                     <CTableDataCell>{book.title}</CTableDataCell>
-                    <CTableDataCell>{book.price} VNĐ</CTableDataCell>
+                    <CTableDataCell>{formatCurrency(book.price) || 0}</CTableDataCell>
                     <CTableDataCell>{book.stock + book.soldQuantity}</CTableDataCell>
                     <CTableDataCell>{book.stock}</CTableDataCell>
                     <CTableDataCell>{book.soldQuantity}</CTableDataCell>
@@ -71,6 +79,7 @@ const Badges = () => {
           </CCardBody>
         </CCard>
       </CCol>
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }

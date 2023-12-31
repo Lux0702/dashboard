@@ -13,7 +13,8 @@ import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import CIcon from '@coreui/icons-react'
 import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons'
 import { Spin } from 'antd'
-
+import { API_BASE_URL } from 'src/constant'
+import { formatCurrency } from 'src/utils/formatCurrent'
 const WidgetsDropdown = () => {
   const [statitic, setIsStatitic] = useState([])
   const [users, setUsers] = useState([])
@@ -33,7 +34,8 @@ const WidgetsDropdown = () => {
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/statistic', {
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/admin/statistics`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -42,196 +44,198 @@ const WidgetsDropdown = () => {
         if (response.ok) {
           const stattitic = await response.json()
           setIsStatitic(stattitic)
-          console.log(stattitic)
+          console.log('get oke :', stattitic)
         } else {
           console.error('Error fetching users:', response.statusText)
         }
       } catch (error) {
         console.error('Error fetching users:', error)
-      }
-    }
-    fetchStatitic()
-  }, [])
-  const yearlyRevenue = statitic.revenueStats?.yearly?.[currentYear] || 0
-  //get all user
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/users', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const user = await response.json()
-          setUsers(user.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchUsers()
-  }, [])
-  const numberOfUsers = users.length
-  console.log(numberOfUsers)
-  //get all post
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/posts', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const post = await response.json()
-          setPosts(post.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchPosts()
-  }, [])
-  const numberOfPosts = posts.length
-  //get all comment
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/comment', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const post = await response.json()
-          setComment(post.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchPosts()
-  }, [])
-  const numberOfComment = comments ? comments.length : 0
-  //get category
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/categories', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const post = await response.json()
-          setCategories(post.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchPosts()
-  }, [])
-  const numberOfCategory = categories ? categories.length : 0
-  //get authorr
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/authors', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const post = await response.json()
-          setAuthors(post.data)
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchPosts()
-  }, [])
-  const numberOfAuthor = authors ? authors.length : 0
-  //get all book
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        setSpinning(true)
-        const response = await fetch('http://localhost:3333/api/v1/books')
-        if (response.ok) {
-          const book = await response.json()
-          setBooks(book.data)
-          //localStorage.setItem('bookData',JSON.stringify(book.data))
-          //console.log('Get data success', books)
-        } else {
-          console.error('Error fetching books:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching books:', error)
       } finally {
         setSpinning(false)
       }
     }
-
-    fetchBooks()
+    fetchStatitic()
   }, [])
-  const revenueChartData = {
-    labels: statitic.revenueStats?.monthly ? Object.keys(statitic.revenueStats.monthly) : [],
-    datasets: [
-      {
-        label: 'Thống kê theo tháng',
-        backgroundColor: 'transparent',
-        borderColor: 'rgba(255,255,255,.55)',
-        pointBackgroundColor: getStyle('--cui-info'),
-        data: statitic.revenueStats?.monthly
-          ? Object.values(statitic.revenueStats.monthly).map((value) => {
-              console.log('Value:', value)
-              return value
-            })
-          : [],
-      },
-    ],
-  }
-  console.log('Revenue Chart Data:', revenueChartData)
+  // const yearlyRevenue = statitic.revenueStats?.yearly?.[currentYear] || 0
+  // //get all user
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     const userInfoString = localStorage.getItem('userInfo')
+  //     const userInfo = JSON.parse(userInfoString)
+  //     const token = userInfo.data.accessToken
+  //     try {
+  //       const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/users', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       })
+  //       if (response.ok) {
+  //         const user = await response.json()
+  //         setUsers(user)
+  //       } else {
+  //         console.error('Error fetching users:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error)
+  //     }
+  //   }
+  //   fetchUsers()
+  // }, [])
+  // const numberOfUsers = users.length
+  // console.log(numberOfUsers)
+  // //get all post
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     const userInfoString = localStorage.getItem('userInfo')
+  //     const userInfo = JSON.parse(userInfoString)
+  //     const token = userInfo.data.accessToken
+  //     try {
+  //       const response = await fetch('http://localhost:3333/api/v1/posts', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       })
+  //       if (response.ok) {
+  //         const post = await response.json()
+  //         setPosts(post.data)
+  //       } else {
+  //         console.error('Error fetching users:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error)
+  //     }
+  //   }
+  //   fetchPosts()
+  // }, [])
+  // const numberOfPosts = posts.length
+  // //get all comment
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     const userInfoString = localStorage.getItem('userInfo')
+  //     const userInfo = JSON.parse(userInfoString)
+  //     const token = userInfo.data.accessToken
+  //     try {
+  //       const response = await fetch('http://localhost:3333/api/v1/comment', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       })
+  //       if (response.ok) {
+  //         const post = await response.json()
+  //         setComment(post.data)
+  //       } else {
+  //         console.error('Error fetching users:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error)
+  //     }
+  //   }
+  //   fetchPosts()
+  // }, [])
+  // const numberOfComment = comments ? comments.length : 0
+  // //get category
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     const userInfoString = localStorage.getItem('userInfo')
+  //     const userInfo = JSON.parse(userInfoString)
+  //     const token = userInfo.data.accessToken
+  //     try {
+  //       const response = await fetch('http://localhost:3333/api/v1/categories', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       })
+  //       if (response.ok) {
+  //         const post = await response.json()
+  //         setCategories(post.data)
+  //       } else {
+  //         console.error('Error fetching users:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error)
+  //     }
+  //   }
+  //   fetchPosts()
+  // }, [])
+  // const numberOfCategory = categories ? categories.length : 0
+  // //get authorr
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     const userInfoString = localStorage.getItem('userInfo')
+  //     const userInfo = JSON.parse(userInfoString)
+  //     const token = userInfo.data.accessToken
+  //     try {
+  //       const response = await fetch('http://localhost:3333/api/v1/authors', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       })
+  //       if (response.ok) {
+  //         const post = await response.json()
+  //         setAuthors(post.data)
+  //       } else {
+  //         console.error('Error fetching users:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching users:', error)
+  //     }
+  //   }
+  //   fetchPosts()
+  // }, [])
+  // const numberOfAuthor = authors ? authors.length : 0
+  // //get all book
+  // useEffect(() => {
+  //   const fetchBooks = async () => {
+  //     try {
+  //       setSpinning(true)
+  //       const response = await fetch('http://localhost:3333/api/v1/books')
+  //       if (response.ok) {
+  //         const book = await response.json()
+  //         setBooks(book.data)
+  //         //localStorage.setItem('bookData',JSON.stringify(book.data))
+  //         //console.log('Get data success', books)
+  //       } else {
+  //         console.error('Error fetching books:', response.statusText)
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching books:', error)
+  //     } finally {
+  //       setSpinning(false)
+  //     }
+  //   }
+
+  //   fetchBooks()
+  // }, [])
+
+  // // const revenueChartData = {
+  // //   labels: statitic.data.revenueByMonth ? Object.keys(statitic.data.revenueByMonth) : [],
+  // //   datasets: [
+  // //     {
+  // //       label: 'Thống kê theo tháng',
+  // //       backgroundColor: 'transparent',
+  // //       borderColor: 'rgba(255,255,255,.55)',
+  // //       pointBackgroundColor: getStyle('--cui-info'),
+  // //       data: statitic.data?.revenueByMonth
+  // //         ? Object.values(statitic.data.revenueByMonth).map((value) => {
+  // //             console.log('Value:', value)
+  // //             return value
+  // //           })
+  // //         : [],
+  // //     },
+  // //   ],
+  // // }
   return (
     <CRow>
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
           color="primary"
-          value={`${numberOfUsers}`}
+          value={`${statitic.data ? statitic.data.userCount : 0}`}
           title="Số lượng khách hàng"
           action={
             <CDropdown alignment="end">
@@ -312,7 +316,7 @@ const WidgetsDropdown = () => {
         <CWidgetStatsA
           className="mb-4"
           color="info"
-          value={`${yearlyRevenue} VNĐ`}
+          value={`${statitic.data ? formatCurrency(statitic.data.totalRevenue) : 0}`}
           title="Tổng doanh thu"
           action={
             <CDropdown alignment="end">
@@ -331,7 +335,7 @@ const WidgetsDropdown = () => {
             <CChartLine
               className="mt-3 mx-3"
               style={{ height: '70px' }}
-              data={revenueChartData}
+              data={'8'}
               options={{
                 plugins: {
                   legend: {
@@ -376,11 +380,12 @@ const WidgetsDropdown = () => {
           }
         />
       </CCol>
+      {/* sô lượng bài viết */}
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
           color="warning"
-          value={`${numberOfPosts}`}
+          value={`${statitic.data ? statitic.data.postCount : 0}`}
           title="Số lượng bài viết"
           action={
             <CDropdown alignment="end">
@@ -442,11 +447,12 @@ const WidgetsDropdown = () => {
           }
         />
       </CCol>
+      {/* sô lượng  thể loại */}
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
           color="danger"
-          value={`${numberOfCategory}`}
+          value={`${statitic.data ? statitic.data.categoryCount : 0}`}
           title="Số lượng thể loại"
           action={
             <CDropdown alignment="end">
@@ -527,12 +533,13 @@ const WidgetsDropdown = () => {
           }
         />
       </CCol>
+      {/* sô lượng  sẳn phẩm */}
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
-          color="primary"
-          value={`${numberOfUsers}`}
-          title="Khách hàng mới"
+          color="warning"
+          value={`${statitic.data ? statitic.data.bookCount : 0}`}
+          title="Số sản phẩm"
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="p-0">
@@ -608,12 +615,12 @@ const WidgetsDropdown = () => {
         />
       </CCol>
       <CCol sm={6} lg={3}>
-        {/* Tổng doanh thu */}
+        {/* Số đơn hàng */}
         <CWidgetStatsA
           className="mb-4"
-          color="info"
-          value={`${yearlyRevenue} VNĐ`}
-          title="Tổng doanh thu"
+          color="secondary"
+          value={`${statitic.data ? statitic.data.orderCount : 0}`}
+          title="Số đơn hàng"
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="p-0">
@@ -631,7 +638,7 @@ const WidgetsDropdown = () => {
             <CChartLine
               className="mt-3 mx-3"
               style={{ height: '70px' }}
-              data={revenueChartData}
+              data={'8'}
               options={{
                 plugins: {
                   legend: {
@@ -676,12 +683,13 @@ const WidgetsDropdown = () => {
           }
         />
       </CCol>
+      {/* tươngtác */}
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
-          color="warning"
-          value={`${numberOfComment}`}
-          title="Tương tác Diễn đàn "
+          color="success"
+          value={`${statitic.data ? statitic.data.commentCount : 0}`}
+          title="Lượng tương tác "
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="p-0">
@@ -742,11 +750,12 @@ const WidgetsDropdown = () => {
           }
         />
       </CCol>
+      {/* Số lượng tác giả */}
       <CCol sm={6} lg={3}>
         <CWidgetStatsA
           className="mb-4"
-          color="danger"
-          value={`${numberOfAuthor}`}
+          color="dark"
+          value={`${statitic.data ? statitic.data.authorCount : 0}`}
           title="Số lượng tác giả"
           action={
             <CDropdown alignment="end">

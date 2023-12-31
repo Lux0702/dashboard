@@ -86,17 +86,17 @@ const _nav = [
       {
         component: CNavItem,
         name: 'Thống kê bán hàng',
-        to: '/notifications/modals',
+        to: '/Statitic/order',
       },
       {
         component: CNavItem,
         name: 'Thống kê sản phẩm',
-        to: '/notifications/badges',
+        to: '/Statitic/book',
       },
       {
         component: CNavItem,
         name: 'Thống kê bài viết',
-        to: '/notifications/alerts',
+        to: '/Statitic/post',
       },
     ],
   },

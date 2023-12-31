@@ -90,9 +90,9 @@ const routes = [
   { path: '/icons/flags', name: 'Flags', element: Flags },
   { path: '/icons/brands', name: 'Brands', element: Brands },
   { path: '/ManagePost', name: 'ManagePost', element: Alerts, exact: true },
-  { path: '/notifications/alerts', name: 'Alerts', element: Alerts },
-  { path: '/notifications/badges', name: 'Statuc Product', element: Badges },
-  { path: '/notifications/modals', name: 'Static Order', element: Modals },
+  { path: '/Statitic/post', name: 'Alerts', element: Alerts },
+  { path: '/Statitic/book', name: 'Statuc Product', element: Badges },
+  { path: '/Statitic/order', name: 'Static Order', element: Modals },
   { path: '/ManagePost/Post', name: 'Post', element: Toasts },
   { path: '/widgets', name: 'Widgets', element: Widgets },
 ]

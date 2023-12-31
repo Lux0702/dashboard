@@ -36,17 +36,17 @@ import CIcon from '@coreui/icons-react'
 import * as icon from '@coreui/icons'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { Spin } from 'antd'
+import { API_BASE_URL } from 'src/constant'
+import { format } from 'date-fns'
+
 const Toasts = () => {
-  const [books, setBooks] = useState([])
-  const [orders, setOrders] = useState([])
   const [posts, setPosts] = useState([])
-  const [users, setUsers] = useState([])
-  const [selectedUser, setSelectedUser] = useState(null)
-  const [selectedBook, setSelectedBook] = useState([])
   const [selectedRowId, setSelectedRowId] = useState(null)
-  const [orderDetail, setOrderDetail] = useState(null)
   const [postDetail, setPostDetail] = useState(null)
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
+  const [spinning, setSpinning] = useState(false)
+
   const [statusOptions, setStatusOptions] = useState([
     { status: 'Pending', color: 'gray' },
     { status: 'Rejected', color: 'red' },
@@ -60,145 +60,69 @@ const Toasts = () => {
       resetRow()
     }
   }, [isOrderModalOpen])
-  //get all user
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/users', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (response.ok) {
-          const user = await response.json()
-          setUsers(user.data)
-          console.log('get user success')
-        } else {
-          console.error('Error fetching users:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      }
-    }
-    fetchUsers()
-  }, [])
-  //get all  book
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/books')
-        if (response.ok) {
-          const book = await response.json()
-          setBooks(book.data.data)
-          console.log('Get data success', books)
-        } else {
-          console.error('Error fetching books:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching books:', error)
-      }
-    }
-    fetchBooks()
-  }, [])
-  //detail post
-  const handleShowOrderDetail = async (selectedItemId) => {
-    console.log(selectedItemId)
-    try {
-      // const userInfoString = localStorage.getItem('userInfo')
-      // const userInfo = JSON.parse(userInfoString)
-      // const token = userInfo.data.accessToken
-      console.log(selectedItemId)
-      const response = await fetch(`http://localhost:3333/api/v1/posts/${selectedItemId}`, {
-        method: 'GET',
-        // headers: {
-        //   Authorization: `Bearer ${token}`,
-        // },
-      })
-      if (response.ok) {
-        const Details = await response.json()
-        setOrderDetail(Details.data)
-        setPostDetail(Details.data)
-        const foundUser = users.find(
-          (user) => user._id && posts.postedBy && user._id === posts.postedBy._id,
-        )
-        // const foundBooks = orderDetail.orderItems.map((orderItem) => {
-        //   return books.find((book) => book._id === orderItem.book)
-        // })
-        console.log(orderDetail)
-        setSelectedUser(foundUser)
-        console.log(selectedBook)
-        setIsOrderModalOpen(true)
-        console.log('get detail success')
-      } else {
-        console.error('Error fetching product details:', response.statusText)
-      }
-    } catch (error) {
-      console.error('Error fetching product details:', error)
-    }
-  }
+
   const handleStatusChange = (selectedStatus) => {
     // Cập nhật trạng thái cho đơn hàng với ID tương ứng
     const updatedOrders = posts.map((post) =>
-      post._id === selectedRowId ? { ...post, status: selectedStatus } : post,
+      post.id === selectedRowId ? { ...post, status: selectedStatus } : post,
     )
-    setOrders(updatedOrders)
     setPosts(updatedOrders)
     updateOrderStatus(selectedRowId, selectedStatus)
   }
   const handleRowClick = (id) => {
     setSelectedRowId(id)
     console.log(id)
-    //setIsPopupOpen(true)
-    //handleShowProduct(selectedRowId)
+    setTimeout(() => handleShowPost(id), 0)
   }
-  //Get all orders
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const userInfoString = localStorage.getItem('userInfo')
-      const userInfo = JSON.parse(userInfoString)
-      const token = userInfo.data.accessToken
-      try {
-        const response = await fetch('http://localhost:3333/api/v1/posts', {
-          method: 'GET',
-        })
-        if (response.ok) {
-          const order = await response.json()
-          const sortedOrders = [...order.data].sort(
-            (a, b) => new Date(b.orderDate) - new Date(a.orderDate),
-          )
-          setOrders(sortedOrders)
-          setPosts(sortedOrders)
-        } else {
-          console.error('Error fetching orders:', response.statusText)
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error)
+  const handleShowPost = (id) => {
+    setPostDetail(posts.find((post) => post.id === id))
+    setIsOrderModalOpen(true)
+  }
+  //get post
+  const fetchOrders = async () => {
+    const userInfoString = localStorage.getItem('userInfo')
+    const userInfo = JSON.parse(userInfoString)
+    const token = userInfo.data.accessToken
+    try {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard/posts`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (response.ok) {
+        const order = await response.json()
+        const sortedOrders = [...order.data].sort(
+          (a, b) => new Date(b.orderDate) - new Date(a.orderDate),
+        )
+        setPosts(sortedOrders)
+      } else {
+        console.error('Error fetching orders:', response.statusText)
       }
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+    } finally {
+      setSpinning(false)
     }
+  }
+  useEffect(() => {
     fetchOrders()
   }, [])
+
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-CA')
   }
-  //custom dropdown
-  const vars = {
-    '--cui-dropdown-border': 'none',
-    '--cui-dropdown-border-radius': '8px',
-    '--cui-btn-hover-border-color': 'none',
-  }
   //Upload status order
-  const updateOrderStatus = async (orderId, newStatus) => {
+  const updateOrderStatus = async (id, newStatus) => {
     const userInfoString = localStorage.getItem('userInfo')
     const userInfo = JSON.parse(userInfoString)
     const token = userInfo.data.accessToken
 
     try {
-      const response = await fetch(`http://localhost:3333/api/v1/orders/${orderId}/status`, {
+      setSpinning(true)
+      const response = await fetch(`${API_BASE_URL}/admin/dashboard/posts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -208,9 +132,10 @@ const Toasts = () => {
       })
 
       if (response.ok) {
-        console.log(`Order ${orderId} status updated to ${newStatus}`)
+        console.log(`Order ${id} status updated to ${newStatus}`)
         const data = await response.json()
         toast.success(data.message)
+        fetchOrders()
       } else {
         console.error('Error updating order status:', response.statusText)
         const data = await response.json()
@@ -218,6 +143,8 @@ const Toasts = () => {
       }
     } catch (error) {
       toast.error('Error updating order status:', error)
+    } finally {
+      setSpinning(false)
     }
   }
   return (
@@ -242,25 +169,19 @@ const Toasts = () => {
               </CTableHead>
               <CTableBody>
                 {posts.map((post, index) => (
-                  <CTableRow
-                    key={index}
-                    active={selectedRowId === post._id}
-                    onClick={(e) => {
-                      handleRowClick(post._id)
-                    }}
-                  >
+                  <CTableRow key={index}>
                     <CTableDataCell>
                       <CIcon
                         icon={icon.cilList}
                         size="xl"
-                        onClick={() => handleShowOrderDetail(selectedRowId)}
+                        onClick={() => handleRowClick(post.id)}
                       />
                     </CTableDataCell>
                     <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                    <CTableDataCell>{post.postedBy.fullName}</CTableDataCell>
+                    <CTableDataCell>{post.postedBy ? post.postedBy.fullname : ''}</CTableDataCell>
                     <CTableDataCell>{post.title}</CTableDataCell>
                     <CTableDataCell>{post.content}</CTableDataCell>
-                    <CTableDataCell>{formatDate(post.postDate)}</CTableDataCell>
+                    <CTableDataCell>{formatDate(post.postedDate)}</CTableDataCell>
                     <CTableDataCell>
                       <CDropdown variant="btn-group" style={{ borderRadius: '12px' }}>
                         <CDropdownToggle
@@ -301,7 +222,7 @@ const Toasts = () => {
               }}
             >
               <CModalHeader closeButton>
-                <CModalTitle>Chi tiết đơn hàng</CModalTitle>
+                <CModalTitle>Chi tiết bài viết</CModalTitle>
               </CModalHeader>
               <CModalBody>
                 {/* Render product details here */}
@@ -312,24 +233,11 @@ const Toasts = () => {
                       <CFormInput
                         aria-label="Tựa đề"
                         disabled
-                        value={postDetail.postedBy ? postDetail.postedBy.fullName : ''}
+                        value={postDetail.postedBy ? postDetail.postedBy.fullname : ''}
                       />
                     </p>
                     <div className="mb-3">
                       <CRow>
-                        {/* <CCol xs="6" className="mb-3">
-                          <CFormLabel htmlFor="totalAmount">Tổng đơn hàng:</CFormLabel>
-                          <CInputGroup className="mb-3">
-                            <CFormInput
-                              disabled
-                              type="text"
-                              id="totalAmount"
-                              name="totalAmount"
-                              value={orderDetail.totalAmount || ''}
-                            />
-                            <CInputGroupText>VNĐ</CInputGroupText>
-                          </CInputGroup>
-                        </CCol> */}
                         <CCol xs="12" className="mb-3">
                           <CFormLabel htmlFor="orderDate">Ngày đăng</CFormLabel>
                           <CFormInput
@@ -337,7 +245,7 @@ const Toasts = () => {
                             type="date"
                             id="orderDate"
                             name="orderDate"
-                            value={formatDate(postDetail.postDate)}
+                            value={formatDate(postDetail.postedDate) || 0}
                           />
                         </CCol>
                       </CRow>
@@ -354,16 +262,6 @@ const Toasts = () => {
                             value={postDetail.status || ''}
                           />
                         </CCol>
-                        {/* <CCol xs="6" className="mb-3">
-                          <CFormLabel htmlFor="phone">Số điện thoại người nhận</CFormLabel>
-                          <CFormInput
-                            disabled
-                            type="text"
-                            id="phone"
-                            name="phone"
-                            value={orderDetail.phone || 0}
-                          />
-                        </CCol> */}
                       </CRow>
                     </div>
                     <div className="mb-3">
@@ -385,18 +283,16 @@ const Toasts = () => {
                       <p>Bình luận:</p>
                       <CAccordion flush>
                         {postDetail &&
-                          postDetail.items &&
-                          postDetail.items.map((item, index) => (
+                          postDetail.comments &&
+                          postDetail.comments.map((item, index) => (
                             <CAccordionItem key={index}>
                               <CAccordionHeader>
-                                {index + 1}. {item.book._id}
+                                <strong>Tên Người bình luận: </strong> {item.user.fullname}
                               </CAccordionHeader>
                               <CAccordionBody>
+                                <p>Mã bình luận. {item.id}</p>
                                 <p>
-                                  <strong>Tên Người bình luận:</strong> {item.book._id}
-                                </p>
-                                <p>
-                                  <strong>Nội dung:</strong> {item.quantity}
+                                  <strong>Nội dung:</strong> {item.comment}
                                 </p>
                               </CAccordionBody>
                             </CAccordionItem>
@@ -424,6 +320,7 @@ const Toasts = () => {
         pauseOnHover
         theme="light"
       />
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }

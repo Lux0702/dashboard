@@ -30,12 +30,15 @@ import { CChartLine, CChartBar } from '@coreui/react-chartjs'
 import { getStyle, hexToRgba } from '@coreui/utils'
 import CIcon from '@coreui/icons-react'
 import '@coreui/coreui/dist/css/coreui.min.css'
-import { Radio, Tabs } from 'antd'
+import { Radio, Tabs, Spin } from 'antd'
+import { API_BASE_URL } from 'src/constant'
+import { formatCurrency } from 'src/utils/formatCurrent'
 const Modals = () => {
   const [visible, setVisible] = useState(false)
   const [statitic, setIsStatitic] = useState([])
   const [currentStats, setCurrentStats] = useState('daily')
   const [activeTab, setActiveTab] = useState(0)
+  const [spinning, setSpinning] = useState(false)
   const toggleTab = (tabIndex) => {
     setActiveTab(tabIndex)
   }
@@ -46,7 +49,8 @@ const Modals = () => {
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/admin/dashboard/statistic', {
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/admin/statistics`, {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -61,13 +65,15 @@ const Modals = () => {
         }
       } catch (error) {
         console.error('Error fetching users:', error)
+      } finally {
+        setSpinning(false)
       }
     }
     fetchStatitic()
   }, [])
   const data = {
     daily: {
-      labels: statitic.revenueStats?.daily ? Object.keys(statitic.revenueStats.daily) : [],
+      labels: statitic.data?.revenueByDay ? Object.keys(statitic.data.revenueByDay) : [],
       datasets: [
         {
           label: 'Daily Revenue',
@@ -75,8 +81,8 @@ const Modals = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.daily
-            ? Object.entries(statitic.revenueStats.daily).map(([day, value]) => {
+          data: statitic.data?.revenueByDay
+            ? Object.entries(statitic.data.revenueByDay).map(([day, value]) => {
                 console.log('Day:', day, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -86,7 +92,7 @@ const Modals = () => {
       ],
     },
     monthly: {
-      labels: statitic.revenueStats?.monthly ? Object.keys(statitic.revenueStats.monthly) : [],
+      labels: statitic.data?.revenueByMonth ? Object.keys(statitic.data.revenueByMonth) : [],
       datasets: [
         {
           label: 'Monthly Revenue',
@@ -94,8 +100,8 @@ const Modals = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.monthly
-            ? Object.entries(statitic.revenueStats.monthly).map(([month, value]) => {
+          data: statitic.data?.revenueByMonth
+            ? Object.entries(statitic.data.revenueByMonth).map(([month, value]) => {
                 console.log('Month:', month, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -105,7 +111,7 @@ const Modals = () => {
       ],
     },
     yearly: {
-      labels: statitic.revenueStats?.yearly ? Object.keys(statitic.revenueStats.yearly) : [],
+      labels: statitic.data?.revenueByYear ? Object.keys(statitic.data.revenueByYear) : [],
       datasets: [
         {
           label: 'Yearly Revenue',
@@ -113,8 +119,8 @@ const Modals = () => {
           borderColor: getStyle('--cui-info'),
           pointHoverBackgroundColor: getStyle('--cui-info'),
           borderWidth: 2,
-          data: statitic.revenueStats?.yearly
-            ? Object.entries(statitic.revenueStats.yearly).map(([year, value]) => {
+          data: statitic.data?.revenueByYear
+            ? Object.entries(statitic.data.revenueByYear).map(([year, value]) => {
                 console.log('Year:', year, 'Value:', value)
                 return value // Chỉ cần thêm giá trị vào mảng data
               })
@@ -236,16 +242,14 @@ const Modals = () => {
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {statitic.revenueStats &&
-                          Object.entries(statitic.revenueStats.daily).map(
-                            ([date, value], index) => (
-                              <CTableRow key={index}>
-                                <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                                <CTableDataCell>{date}</CTableDataCell>
-                                <CTableDataCell>{value} VNĐ</CTableDataCell>
-                              </CTableRow>
-                            ),
-                          )}
+                        {statitic.data &&
+                          Object.entries(statitic.data.revenueByDay).map(([date, value], index) => (
+                            <CTableRow key={index}>
+                              <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
+                              <CTableDataCell>{date}</CTableDataCell>
+                              <CTableDataCell>{formatCurrency(value) || 0}</CTableDataCell>
+                            </CTableRow>
+                          ))}
                       </CTableBody>
                     </CTable>
                   ),
@@ -263,13 +267,13 @@ const Modals = () => {
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {statitic.revenueStats &&
-                          Object.entries(statitic.revenueStats.monthly).map(
+                        {statitic.data &&
+                          Object.entries(statitic.data.revenueByMonth).map(
                             ([date, value], index) => (
                               <CTableRow key={index}>
                                 <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                                 <CTableDataCell>{date}</CTableDataCell>
-                                <CTableDataCell>{value} VNĐ</CTableDataCell>
+                                <CTableDataCell>{formatCurrency(value) || 0} </CTableDataCell>
                               </CTableRow>
                             ),
                           )}
@@ -290,13 +294,13 @@ const Modals = () => {
                         </CTableRow>
                       </CTableHead>
                       <CTableBody>
-                        {statitic.revenueStats &&
-                          Object.entries(statitic.revenueStats.yearly).map(
+                        {statitic.data &&
+                          Object.entries(statitic.data.revenueByYear).map(
                             ([date, value], index) => (
                               <CTableRow key={index}>
                                 <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                                 <CTableDataCell>{date}</CTableDataCell>
-                                <CTableDataCell>{value} VNĐ</CTableDataCell>
+                                <CTableDataCell>{formatCurrency(value) || 0}</CTableDataCell>
                               </CTableRow>
                             ),
                           )}
@@ -309,6 +313,7 @@ const Modals = () => {
           </CRow>
         </CCardBody>
       </CCard>
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }

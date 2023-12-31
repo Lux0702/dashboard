@@ -212,6 +212,7 @@ const Accordion = () => {
         toast.success(data.message, {
           onClose: () => {
             fetchBlacklist()
+            fetchUsers()
             setSelectedDeleteId(null)
           },
         })
@@ -583,7 +584,7 @@ const Accordion = () => {
               </CModalBody>
               <CModalFooter>
                 <CButton color="secondary" onClick={cancelBlack}>
-                  Hủy
+                  Không
                 </CButton>
                 <CButton
                   color="danger"
@@ -591,7 +592,7 @@ const Accordion = () => {
                     confirmAddBlackList(selectedDeleteId)
                   }}
                 >
-                  Xóa
+                  Có
                 </CButton>
               </CModalFooter>
             </CModal>

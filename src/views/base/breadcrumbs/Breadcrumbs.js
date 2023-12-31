@@ -315,11 +315,9 @@ const Breadcrumbs = () => {
                     <small style={{ fontSize: '10px' }}>
                       <em>
                         {orderDetail &&
-                          (orderDetail.paymentStatus
-                            ? orderDetail.paymentStatus === 'NOT_PAID'
-                              ? 'Chưa thanh toán'
-                              : 'Đã thanh toán'
-                            : '')}
+                          (orderDetail.paymentStatus === 'NOT_PAID'
+                            ? 'Chưa thanh toán'
+                            : 'Đã thanh toán')}
                       </em>
                     </small>
                   </CBadge>

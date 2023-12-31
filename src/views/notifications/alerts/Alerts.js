@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { format } from 'date-fns'
 import {
   CAlert,
   CAlertHeading,
@@ -21,17 +22,24 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import * as icon from '@coreui/icons'
-
+import { API_BASE_URL } from 'src/constant'
+import { Spin } from 'antd'
 const Alerts = () => {
   const [posts, setPosts] = useState([])
+  const [spinning, setSpinning] = useState(false)
+
   useEffect(() => {
     const fetchOrders = async () => {
       const userInfoString = localStorage.getItem('userInfo')
       const userInfo = JSON.parse(userInfoString)
       const token = userInfo.data.accessToken
       try {
-        const response = await fetch('http://localhost:3333/api/v1/posts', {
+        setSpinning(true)
+        const response = await fetch(`${API_BASE_URL}/admin/dashboard/posts`, {
           method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
         if (response.ok) {
           const order = await response.json()
@@ -44,13 +52,18 @@ const Alerts = () => {
         }
       } catch (error) {
         console.error('Error fetching orders:', error)
+      } finally {
+        setSpinning(false)
       }
     }
     fetchOrders()
   }, [])
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString)
+  //   return date.toLocaleDateString('en-CA')
+  // }
   const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-CA')
+    return format(new Date(dateString), 'dd-MM-yyyy')
   }
   return (
     <CRow>
@@ -79,9 +92,11 @@ const Alerts = () => {
                       <CIcon icon={icon.cilList} size="xl" />
                     </CTableDataCell>
                     <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
-                    <CTableDataCell>{post.length}</CTableDataCell>
-                    <CTableDataCell>{formatDate(post.postDate)}</CTableDataCell>
-                    <CTableDataCell>{formatDate(post.postDate)}</CTableDataCell>
+                    <CTableDataCell>{post.postedBy ? post.postedBy.fullname : ''}</CTableDataCell>
+                    <CTableDataCell>{post.title}</CTableDataCell>
+                    <CTableDataCell>{post.content}</CTableDataCell>
+                    <CTableDataCell>{formatDate(post.postedDate)}</CTableDataCell>
+                    <CTableDataCell>{post.status}</CTableDataCell>
                   </CTableRow>
                 ))}
               </CTableBody>
@@ -89,6 +104,7 @@ const Alerts = () => {
           </CCardBody>
         </CCard>
       </CCol>
+      <Spin spinning={spinning} fullscreen />
     </CRow>
   )
 }
