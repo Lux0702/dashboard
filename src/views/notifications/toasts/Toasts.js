@@ -61,13 +61,13 @@ const Toasts = () => {
     }
   }, [isOrderModalOpen])
 
-  const handleStatusChange = (selectedStatus) => {
+  const handleStatusChange = (id, selectedStatus) => {
     // Cập nhật trạng thái cho đơn hàng với ID tương ứng
     const updatedOrders = posts.map((post) =>
       post.id === selectedRowId ? { ...post, status: selectedStatus } : post,
     )
     setPosts(updatedOrders)
-    updateOrderStatus(selectedRowId, selectedStatus)
+    updateOrderStatus(id, selectedStatus)
   }
   const handleRowClick = (id) => {
     setSelectedRowId(id)
@@ -119,7 +119,7 @@ const Toasts = () => {
     const userInfoString = localStorage.getItem('userInfo')
     const userInfo = JSON.parse(userInfoString)
     const token = userInfo.data.accessToken
-
+    console.log(id, 'và', newStatus)
     try {
       setSpinning(true)
       const response = await fetch(`${API_BASE_URL}/admin/dashboard/posts/${id}`, {
@@ -180,7 +180,13 @@ const Toasts = () => {
                     <CTableHeaderCell scope="row">{index + 1}</CTableHeaderCell>
                     <CTableDataCell>{post.postedBy ? post.postedBy.fullname : ''}</CTableDataCell>
                     <CTableDataCell>{post.title}</CTableDataCell>
-                    <CTableDataCell>{post.content}</CTableDataCell>
+                    <CTableDataCell style={{ width: '600px', height: '50px', overflowY: 'hidden' }}>
+                      <div
+                        style={{ maxHeight: '50px', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                      >
+                        {post.content}
+                      </div>
+                    </CTableDataCell>
                     <CTableDataCell>{formatDate(post.postedDate)}</CTableDataCell>
                     <CTableDataCell>
                       <CDropdown variant="btn-group" style={{ borderRadius: '12px' }}>
@@ -200,7 +206,11 @@ const Toasts = () => {
                             <CDropdownItem
                               style={{ borderRadius: '12px' }}
                               key={index}
-                              onClick={() => handleStatusChange(option.status)}
+                              onClick={() => {
+                                setSelectedRowId(post.id)
+                                console.log('id là: ', post.id)
+                                handleStatusChange(post.id, option.status)
+                              }}
                             >
                               {option.status}
                             </CDropdownItem>
